@@ -146,11 +146,41 @@ let echo_matcher = new TargetMatcher();
 let echo_processor = new MatcherProcessor(
     echo_matcher,
     (text) => {
+        add_block(text, true);
         console.log('DEBUG', 'echo_processor', [text]);
         echo_matcher.clear_target(); // other wise will might be matched twice.
     }
 );
 echo_processor.through = true;
+
+blocks = [];
+function add_block(text, python){
+    let dom = document.createElement("div");
+    document.getElementById('console_fancy').appendChild(dom);
+
+    let name = 'block' + blocks.length;
+    dom.id = name;
+    let block = ace.edit(name);
+    blocks.push(block);
+
+    block.setOptions({
+        // https://stackoverflow.com/a/13579233/7037749
+        maxLines: 10
+    });
+    if (python) {
+        block.session.setMode("ace/mode/python")
+    }
+    block.setTheme("ace/theme/monokai");
+    block.setReadOnly(true); //for debug
+    block.session.setUseWrapMode(true);
+    block.renderer.setShowGutter(false);
+    block.setHighlightActiveLine(false);
+    block.session.on('change', () => {
+        block.renderer.scrollToLine(Number.POSITIVE_INFINITY);
+    })
+
+    block.session.insert({row: 1000000, col: 1000000}, text);
+}
 
 function serial_processor(value) {
     console.log('DEBUG', 'serial in', [value])
