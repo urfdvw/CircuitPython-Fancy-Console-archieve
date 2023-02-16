@@ -31,6 +31,7 @@ class TargetMatcher {
     push (segment) {
         let result = [];
         segment = this.segment + segment;
+        this.segment = '';
         // see if the tail contains partial target
         for (let i = segment.length - this.target.length; i < segment.length; i++) {
             if (i < 0) {
@@ -112,19 +113,23 @@ class MatcherProcessor {
         matcher,
         in_action = () => {},
         enter_action = () => {},
-        exit_action = () => {}
+        exit_action = () => {},
+        out_action = () => {},
     ) {
         this.matcher = matcher;
         this.in_action = in_action;
         this.enter_action = enter_action;
         this.exit_action = exit_action;
+        this.out_action = out_action;
 
         this.through = false;
         this.segment = '';
+
+        this.branch = [];
     }
     push (parts) {
         var outlet = [];
-        var branch = [];
+        this.branch = [];
         for (const part_in of parts) {
             for (const part_out of this.matcher.push(part_in)) {
                 const text = part_out[0];
@@ -135,12 +140,13 @@ class MatcherProcessor {
                 }
                 if (mood === 1) {
                     this.in_action(text);
-                    branch.push(text);
+                    this.branch.push(text);
                 }
                 if (diff === -1) {
                     this.exit_action(text);
                 }
                 if (mood === 0) {
+                    this.out_action(text);
                     outlet.push(text);
                 }
             }
@@ -160,29 +166,31 @@ let title_processor = new MatcherProcessor(
     () => {document.getElementById('title_bar').innerHTML = ""}
 );
 
+let echo_matcher = new TargetMatcher();
+let echo_processor = new MatcherProcessor(
+    echo_matcher,
+    () => {},
+    () => {
+        echo_matcher.clear_target(); // other wise will might be matched twice.
+    }
+);
+
 let exec_processor = new MatcherProcessor(
     new BracketMatcher(
         'exec("""',
         '""")',
     ),
     (text) => {
-        serial.session.insert(
-            {row: 1000000, col: 1000000},
-            text.split('\\n').join('\n')
-        )
+        text = text.split('\\n').join('\n');
+        add_block(text, true);
     },
-    () => {serial.session.insert({row: 1000000, col: 1000000}, '\n')}
-);
-
-let echo_matcher = new TargetMatcher();
-let echo_processor = new MatcherProcessor(
-    echo_matcher,
+    () => {},
+    () => {},
     (text) => {
         add_block(text, true);
-        echo_matcher.clear_target(); // other wise will might be matched twice.
-    }
+    },
 );
-echo_processor.through = true;
+
 
 blocks = [];
 function add_block(text, python){
@@ -215,24 +223,28 @@ function add_block(text, python){
 
 function serial_processor(value) {
     console.log('DEBUG', 'serial in', [value])
-    var parts = [];
+    var main_flow = [];
     for (const part of line_ending_matcher.push(value)) {
-        parts.push(part[0]);
+        main_flow.push(part[0]);
     }
 
-    console.log('DEBUG', 'parts', parts);
+    console.log('DEBUG', 'after line_ending_matcher', main_flow);
 
-    for (let processor of [
-        title_processor,
-        echo_processor,
-        exec_processor,
-    ]){
-        parts = processor.push(parts);
-        console.log('DEBUG', 'parts', parts);
-    }
+    main_flow = title_processor.push(main_flow);
 
+    console.log('DEBUG', 'after title_processor', main_flow);
 
-    for (const part of parts) {
+    main_flow = echo_processor.push(main_flow);
+    var echo_branch = echo_processor.branch;
+
+    console.log('DEBUG', 'after echo_processor', main_flow, echo_branch);
+
+    echo_branch = exec_processor.push(echo_branch);
+
+    console.log('DEBUG', 'after exec_processor', echo_branch);
+
+    for (const part of main_flow) {
+        console.log(part);
         serial.session.insert({row: 1000000, col: 1000000}, part);
     }
 
