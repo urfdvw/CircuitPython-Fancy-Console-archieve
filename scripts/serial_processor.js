@@ -218,15 +218,11 @@ function add_block(text, python){
         block.renderer.scrollToLine(Number.POSITIVE_INFINITY);
     })
 
-    block.session.insert({row: 1000000, col: 1000000}, text);
+    block.session.insert({row: Number.POSITIVE_INFINITY, col: Number.POSITIVE_INFINITY}, text);
 }
 
-function serial_processor(value) {
-    // console.log('DEBUG', 'serial in', [value])
-    var main_flow = [];
-    for (const part of line_ending_matcher.push(value)) {
-        main_flow.push(part[0]);
-    }
+function serial_processor(main_flow) {
+    console.log('DEBUG', 'main_flow', main_flow.length, main_flow.join('').length);
 
     // console.log('DEBUG', 'after line_ending_matcher', main_flow);
 
@@ -244,7 +240,7 @@ function serial_processor(value) {
     // console.log('DEBUG', 'after exec_processor', echo_branch);
 
     for (const part of main_flow) {
-        serial.session.insert({row: Number.POSITIVE_INFINITY, col: Number.POSITIVE_INFINITY}, part);
+        serial.session.insert({row: Number.POSITIVE_INFINITY, col: Number.POSITIVE_INFINITY}, part); // this is the only thing that slows things down
     }
 }
 

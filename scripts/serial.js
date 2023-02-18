@@ -30,6 +30,7 @@ async function connect() {
     inputStream = decoder.readable;
 
     reader = inputStream.getReader();
+    readLoop();
     start_readLoop();
 }
 
@@ -71,21 +72,27 @@ async function clickConnect() {
 }
 
 
+let serial_parts = []
 async function readLoop() {
+    while (true) {
         const { value, done } = await reader.read();
+        serial_parts.push(value); 
 
-        if (value.length > 0) {
-            serial_processor(value);
+        if (done) {
+            console.log('[readLoop] DONE', done);
+            reader.releaseLock();
         }
+    }
 
-        // if (done) {
-        //     console.log('[readLoop] DONE', done);
-        //     reader.releaseLock();
-        // }
 }
 
 function start_readLoop() {
-    setInterval(readLoop, 20);
+    setInterval(() => {
+        let len = serial_parts.length;
+        let parts = serial_parts.slice(0, len);
+        serial_parts = serial_parts.slice(len);
+        serial_processor(parts);
+    }, 10);
 }
 
 /*
