@@ -30,7 +30,7 @@ async function connect() {
     inputStream = decoder.readable;
 
     reader = inputStream.getReader();
-    readLoop();
+    start_readLoop();
 }
 
 // not used
@@ -72,21 +72,22 @@ async function clickConnect() {
 
 
 async function readLoop() {
-    // Reads data from the input stream and displays it in the console.
-    while (true) {
         const { value, done } = await reader.read();
 
         if (value.length > 0) {
             serial_processor(value);
         }
-        
-        if (done) {
-            console.log('[readLoop] DONE', done);
-            reader.releaseLock();
-            break;
-        }
-    }
+
+        // if (done) {
+        //     console.log('[readLoop] DONE', done);
+        //     reader.releaseLock();
+        // }
 }
+
+function start_readLoop() {
+    setInterval(readLoop, 20);
+}
+
 /*
 * Serial Send
 */
@@ -139,7 +140,7 @@ function send_multiple_lines(lines) {
     if (serial.getValue().slice(-4, -1) !== ">>>") {
         sendCTRLC();
     }
-    
+
     send_cmd('exec("""' + lines + '""")' + '\x0D')
     // https://stackoverflow.com/a/60111488/7037749
 }

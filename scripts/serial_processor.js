@@ -222,40 +222,30 @@ function add_block(text, python){
 }
 
 function serial_processor(value) {
-    console.log('DEBUG', 'serial in', [value])
+    // console.log('DEBUG', 'serial in', [value])
     var main_flow = [];
     for (const part of line_ending_matcher.push(value)) {
         main_flow.push(part[0]);
     }
 
-    console.log('DEBUG', 'after line_ending_matcher', main_flow);
+    // console.log('DEBUG', 'after line_ending_matcher', main_flow);
 
     main_flow = title_processor.push(main_flow);
 
-    console.log('DEBUG', 'after title_processor', main_flow);
+    // console.log('DEBUG', 'after title_processor', main_flow);
 
     main_flow = echo_processor.push(main_flow);
     var echo_branch = echo_processor.branch;
 
-    console.log('DEBUG', 'after echo_processor', main_flow, echo_branch);
+    // console.log('DEBUG', 'after echo_processor', main_flow, echo_branch);
 
     echo_branch = exec_processor.push(echo_branch);
 
-    console.log('DEBUG', 'after exec_processor', echo_branch);
+    // console.log('DEBUG', 'after exec_processor', echo_branch);
 
     for (const part of main_flow) {
-        console.log(part);
-        serial.session.insert({row: 1000000, col: 1000000}, part);
+        serial.session.insert({row: Number.POSITIVE_INFINITY, col: Number.POSITIVE_INFINITY}, part);
     }
-
-    /* Weird issue with weird solution
-    if the following line is removed.
-    some competing issues happems
-    like if start from REPL
-    and run a cell
-    >>> will appear in the middle of the code block
-    */
-    serial.session.getValue();
 }
 
 console.log('serial_processor.js loaded')
