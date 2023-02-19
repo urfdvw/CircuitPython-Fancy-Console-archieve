@@ -140,7 +140,11 @@ class MatcherProcessor {
                 }
                 if (mood === 1) {
                     this.in_action(text);
-                    this.branch.push(text);
+                    if (this.through) {
+                        outlet.push(text);
+                    } else {
+                        this.branch.push(text);
+                    }
                 }
                 if (diff === -1) {
                     this.exit_action(text);
@@ -156,6 +160,10 @@ class MatcherProcessor {
 }
 
 let line_ending_matcher = new TargetMatcher('\r\n');
+let line_ending_processor = new MatcherProcessor(
+    line_ending_matcher
+)
+line_ending_processor.through = true;
 
 let title_processor = new MatcherProcessor(
     new BracketMatcher(
@@ -222,26 +230,27 @@ function add_block(text, python){
 }
 
 function serial_processor(main_flow) {
-    console.log('DEBUG', 'main_flow', main_flow.length, main_flow.join('').length);
+    // console.log('DEBUG', 'main_flow', main_flow.length, main_flow.join('').length);
 
-    // console.log('DEBUG', 'after line_ending_matcher', main_flow);
+    main_flow = line_ending_processor.push(main_flow);
+    // console.log('DEBUG', 'after line_ending_processor', main_flow);
 
     main_flow = title_processor.push(main_flow);
-
     // console.log('DEBUG', 'after title_processor', main_flow);
 
-    main_flow = echo_processor.push(main_flow);
-    var echo_branch = echo_processor.branch;
-
-    // console.log('DEBUG', 'after echo_processor', main_flow, echo_branch);
-
-    echo_branch = exec_processor.push(echo_branch);
-
-    // console.log('DEBUG', 'after exec_processor', echo_branch);
-
+    // push everything execept title to plain terminal
+    // this is like "stats for nerds"
     for (const part of main_flow) {
         serial.session.insert({row: Number.POSITIVE_INFINITY, col: Number.POSITIVE_INFINITY}, part); // this is the only thing that slows things down
     }
+
+    main_flow = echo_processor.push(main_flow);
+    var echo_branch = echo_processor.branch;
+    // console.log('DEBUG', 'after echo_processor', main_flow, echo_branch);
+
+    echo_branch = exec_processor.push(echo_branch);
+    // console.log('DEBUG', 'after exec_processor', echo_branch);
+
 }
 
 console.log('serial_processor.js loaded')

@@ -76,6 +76,7 @@ let serial_parts = []
 async function readLoop() {
     while (true) {
         const { value, done } = await reader.read();
+        console.log('DEBUG', 'seial in', [value]);
         serial_parts.push(value); 
 
         if (done) {
