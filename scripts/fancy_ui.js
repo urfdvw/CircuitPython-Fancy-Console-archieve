@@ -1,6 +1,6 @@
 class SerialOut {
-    constructor() {
-        this.serial_out = document.getElementById('serial_out');
+    constructor(dom_id) {
+        this.serial_out = document.getElementById(dom_id);
         // create contents
         this.interrupt = document.createElement('button');
         this.enter_repl = document.createElement('button');
@@ -99,7 +99,7 @@ class SerialOut {
     }
 }
 
-let serial_out = new SerialOut();
+let serial_out = new SerialOut('serial_out');
 
 class ExecutionBlock {
     constructor (index, console) {
@@ -153,25 +153,81 @@ class ExecutionBlock {
     }
     set_editing () {
         this.pyin.setReadOnly(false);
+        this.pyin_container.style.display = '';
         this.pyout_container.style.display = 'none';
         this.edit.style.display = 'none';
         this.rerun.style.display = 'none';
     }
-    set_running () {
+    set_repl_running () {
         this.pyin.setReadOnly(true);
+        this.pyin_container.style.display = '';
+        this.pyout_container.style.display = '';
+        this.edit.style.display = 'none';
+        this.rerun.style.display = 'none';
+    }
+    set_script_running () {
+        this.pyin_container.style.display = 'none';
         this.pyout_container.style.display = '';
         this.edit.style.display = 'none';
         this.rerun.style.display = 'none';
     }
     set_done () {
         this.pyin.setReadOnly(true);
+        this.pyin_container.style.display = '';
         this.pyout_container.style.display = '';
         this.edit.style.display = '';
         this.rerun.style.display = '';
     }
 }
 
-let exec_block_1 = new ExecutionBlock(1, document.getElementById('console'));
-exec_block_1.set_done();
-let exec_block_2 = new ExecutionBlock(2, document.getElementById('console'));
-exec_block_2.set_editing();
+class FancyConsole {
+    constructor (dom_id) {
+        this.console = document.getElementById(dom_id);
+
+    }
+}
+let fancy_console = new FancyConsole('console');
+
+class StateDetector {
+    constructor () {
+        this.now = null;
+        this.last = null;
+        setInterval(() => {
+            this.check();
+        }, 10);
+    }
+
+    check () {
+        this.last = this.now;
+        let title_bar = document.getElementById("title_bar").innerText;
+        if (title_bar.includes('REPL')) {
+            if (serial.session.getLine(serial.session.getLength() - 1) === '>>> ') {
+                this.now = "repl waiting";
+            } else {
+                this.now = "repl running";
+            }
+        } else {
+            if (title_bar.includes('code.py') && !title_bar.includes('@')) {
+                this.now = "script running";
+            } else {
+                this.now = "script done";
+            }
+        }
+        if (this.now !== null && this.last !== null) {
+            if (this.now !== this.last) {
+                if (this.last.startsWith('repl') && this.now.endsWith('done')) {
+                    // ignore the "Done" after repl close
+                    return;
+                }
+                console.log(this.now);
+                console.log(title_bar);
+            }
+        }
+    }
+} 
+let state = new StateDetector()
+
+// let exec_block_1 = new ExecutionBlock(1, document.getElementById('console'));
+// exec_block_1.set_done();
+// let exec_block_2 = new ExecutionBlock(2, document.getElementById('console'));
+// exec_block_2.set_editing();

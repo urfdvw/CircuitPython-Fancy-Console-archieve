@@ -44,3 +44,12 @@ A serial console for CircuitPython with Readability and Usability tools
             - not syntax highlighted
         - Save and run button (IDE function)
     - components will appear only when applicable.
+
+# States
+> S: State
+> C: Conditions
+
+- S: REPL waiting
+- S: REPL running
+- S: Script running
+- S: Script done

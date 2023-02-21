@@ -76,7 +76,7 @@ let serial_parts = []
 async function readLoop() {
     while (true) {
         const { value, done } = await reader.read();
-        console.log('DEBUG', 'seial in', [value]);
+        // console.log('DEBUG', 'seial in', [value]);
         serial_parts.push(value); 
 
         if (done) {
@@ -103,7 +103,7 @@ function start_readLoop() {
 function send_cmd(s) {
     // send single byte command
     // s: str
-    console.log('DEBUG', 'serial out', [s]);
+    // console.log('DEBUG', 'serial out', [s]);
     let target = s.slice(0, -1);
     if (target.length > 0){
         echo_matcher.target = target;
