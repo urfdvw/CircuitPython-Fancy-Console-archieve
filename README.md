@@ -3,7 +3,7 @@ A serial console for CircuitPython with Readability and Usability tools
 
 # UI design
 
-- Running block
+- execution block
     - this section is a repeated block that each block represents
         - one script run
         - one loop body in the REPL

@@ -203,7 +203,7 @@ let exec_processor = new MatcherProcessor(
 blocks = [];
 function add_block(text, python){
     let dom = document.createElement("div");
-    document.getElementById('console_fancy').appendChild(dom);
+    document.getElementById('console').appendChild(dom);
 
     let name = 'block' + blocks.length;
     dom.id = name;
