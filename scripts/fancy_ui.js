@@ -183,49 +183,76 @@ class ExecutionBlock {
 class FancyConsole {
     constructor (dom_id) {
         this.console = document.getElementById(dom_id);
+        this.state_now = null;
+        this.state_last = null;
 
-    }
-}
-let fancy_console = new FancyConsole('console');
-
-class StateDetector {
-    constructor () {
-        this.now = null;
-        this.last = null;
         setInterval(() => {
             this.check();
         }, 10);
+
+        let start_action = setInterval(() => {
+            sendCTRLC();
+            if (this.state_now === "repl waiting") {
+                clearInterval(start_action);
+            }
+        }, 200);
     }
 
     check () {
-        this.last = this.now;
+        this.state_last = this.state_now;
         let title_bar = document.getElementById("title_bar").innerText;
         if (title_bar.includes('REPL')) {
             if (serial.session.getLine(serial.session.getLength() - 1) === '>>> ') {
-                this.now = "repl waiting";
+                this.state_now = "repl waiting";
             } else {
-                this.now = "repl running";
+                this.state_now = "repl running";
             }
         } else {
             if (title_bar.includes('code.py') && !title_bar.includes('@')) {
-                this.now = "script running";
+                this.state_now = "script running";
             } else {
-                this.now = "script done";
+                this.state_now = "script done";
             }
         }
-        if (this.now !== null && this.last !== null) {
-            if (this.now !== this.last) {
-                if (this.last.startsWith('repl') && this.now.endsWith('done')) {
+        // dispatcher
+        if (this.state_now !== null && this.state_last !== null) {
+            if (this.state_now !== this.state_last) {
+                if (this.state_last.startsWith('repl') && this.state_now.endsWith('done')) {
                     // ignore the "Done" after repl close
+                    this.state_now = this.state_last;
                     return;
                 }
-                console.log(this.now);
-                console.log(title_bar);
+                if (this.state_now === "repl waiting") {
+                    this.enter_repl_waiting();
+                }
+                if (this.state_now === "repl running") {
+                    this.enter_repl_running();
+                }
+                if (this.state_now === "script running") {
+                    this.enter_script_running();
+                }
+                if (this.state_now === "script done") {
+                    this.enter_script_done();
+                }
             }
         }
     }
+
+    enter_repl_waiting () {
+        console.log(this.state_now);
+    }
+    enter_repl_running () {
+        console.log(this.state_now);
+    }
+    enter_script_running () {
+        console.log(this.state_now);
+    }
+    enter_script_done () {
+        console.log(this.state_now);
+    }
 } 
-let state = new StateDetector()
+
+let fancy_console = new FancyConsole('console');
 
 // let exec_block_1 = new ExecutionBlock(1, document.getElementById('console'));
 // exec_block_1.set_done();
