@@ -190,44 +190,44 @@ let exec_processor = new MatcherProcessor(
     ),
     (text) => {
         text = text.split('\\n').join('\n');
-        add_block(text, true);
+        // add_block(text, true);
     },
     () => {},
     () => {},
     (text) => {
-        add_block(text, true);
+        // add_block(text, true);
     },
 );
 
 
-blocks = [];
-function add_block(text, python){
-    let dom = document.createElement("div");
-    document.getElementById('console').appendChild(dom);
+// blocks = [];
+// function add_block(text, python){
+//     let dom = document.createElement("div");
+//     document.getElementById('console').appendChild(dom);
 
-    let name = 'block' + blocks.length;
-    dom.id = name;
-    let block = ace.edit(name);
-    blocks.push(block);
+//     let name = 'block' + blocks.length;
+//     dom.id = name;
+//     let block = ace.edit(name);
+//     blocks.push(block);
 
-    block.setOptions({
-        // https://stackoverflow.com/a/13579233/7037749
-        maxLines: 10
-    });
-    if (python) {
-        block.session.setMode("ace/mode/python")
-    }
-    block.setTheme("ace/theme/monokai");
-    block.setReadOnly(true); //for debug
-    block.session.setUseWrapMode(true);
-    block.renderer.setShowGutter(false);
-    block.setHighlightActiveLine(false);
-    block.session.on('change', () => {
-        block.renderer.scrollToLine(Number.POSITIVE_INFINITY);
-    })
+//     block.setOptions({
+//         // https://stackoverflow.com/a/13579233/7037749
+//         maxLines: 10
+//     });
+//     if (python) {
+//         block.session.setMode("ace/mode/python")
+//     }
+//     block.setTheme("ace/theme/monokai");
+//     block.setReadOnly(true); //for debug
+//     block.session.setUseWrapMode(true);
+//     block.renderer.setShowGutter(false);
+//     block.setHighlightActiveLine(false);
+//     block.session.on('change', () => {
+//         block.renderer.scrollToLine(Number.POSITIVE_INFINITY);
+//     })
 
-    block.session.insert({row: Number.POSITIVE_INFINITY, col: Number.POSITIVE_INFINITY}, text);
-}
+//     block.session.insert({row: Number.POSITIVE_INFINITY, col: Number.POSITIVE_INFINITY}, text);
+// }
 
 function serial_processor(main_flow) {
     // console.log('DEBUG', 'main_flow', main_flow.length, main_flow.join('').length);
@@ -250,6 +250,8 @@ function serial_processor(main_flow) {
 
     echo_branch = exec_processor.push(echo_branch);
     // console.log('DEBUG', 'after exec_processor', echo_branch);
+
+    fancy_console.append_pyout(main_flow)
 
 }
 

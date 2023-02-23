@@ -102,7 +102,7 @@ class SerialOut {
 let serial_out = new SerialOut('serial_out');
 
 class ExecutionBlock {
-    constructor (index, console) {
+    constructor (index, fancy_console) {
         this.index = index
         // create contents
         this.block = document.createElement('div');
@@ -112,7 +112,7 @@ class ExecutionBlock {
         this.edit = document.createElement('button');
         this.rerun = document.createElement('button');
         // append
-        console.appendChild(this.block);
+        fancy_console.appendChild(this.block);
         this.block.appendChild(this.title);
         this.block.appendChild(this.pyin_container);
         this.block.appendChild(this.pyout_container);
@@ -137,7 +137,22 @@ class ExecutionBlock {
         this.pyin.session.setUseWrapMode(true);
         this.pyin.session.setTabSize(4);
         this.pyin.session.setUseSoftTabs(true);
-        this.pyin.focus();
+        this.pyin.commands.addCommand({
+            name: 'newlineAndIndent',
+            bindKey: { win: 'Shift-Enter', mac: 'Shift-Enter' },
+            exec: function (this_editor) {
+                console.log('newlineAndIndent')
+                this_editor.insert("\n");
+            },
+        });
+        this.pyin.commands.addCommand({
+            name: 'run_command',
+            bindKey: { win: 'Enter', mac: 'Enter' },
+            exec: function (this_editor) {
+                console.log('run_command')
+                send_code(this_editor);
+            },
+        });
         // pyout
         this.pyout = ace.edit(this.pyout_container.id);
         this.pyout.setReadOnly(true); //for debug
@@ -151,27 +166,30 @@ class ExecutionBlock {
             this.pyout.renderer.scrollToLine(Number.POSITIVE_INFINITY);
         })
     }
-    set_editing () {
+    disp_repl_waiting () {
+        this.title.innerText = 'REPL block [' + this.index + ']';
         this.pyin.setReadOnly(false);
+        this.pyin.focus();
         this.pyin_container.style.display = '';
         this.pyout_container.style.display = 'none';
         this.edit.style.display = 'none';
         this.rerun.style.display = 'none';
     }
-    set_repl_running () {
+    disp_repl_running () {
         this.pyin.setReadOnly(true);
         this.pyin_container.style.display = '';
         this.pyout_container.style.display = '';
         this.edit.style.display = 'none';
         this.rerun.style.display = 'none';
     }
-    set_script_running () {
+    disp_script_running () {
+        this.title.innerText = 'Script block [' + this.index + ']';
         this.pyin_container.style.display = 'none';
         this.pyout_container.style.display = '';
         this.edit.style.display = 'none';
         this.rerun.style.display = 'none';
     }
-    set_done () {
+    disp_script_done () {
         this.pyin.setReadOnly(true);
         this.pyin_container.style.display = '';
         this.pyout_container.style.display = '';
@@ -186,6 +204,10 @@ class FancyConsole {
         this.state_now = null;
         this.state_last = null;
 
+        this.block_list = [];
+    }
+
+    start () {
         setInterval(() => {
             this.check();
         }, 10);
@@ -238,13 +260,36 @@ class FancyConsole {
         }
     }
 
+    add_block () {
+        let block_index = this.block_list.length;
+        let current_blcok = new ExecutionBlock(block_index, this.console);
+        this.block_list.push(current_blcok);
+        if (this.state_now === 'repl waiting') {
+            current_blcok.disp_repl_waiting();
+        } else if (this.state_now === 'script running') {
+            current_blcok.disp_script_running();
+        } else {
+            console.log('error adding block')
+        }
+    }
+
+    append_pyout (parts) {
+        for (const text of parts) {
+            this.block_list.at(-1).pyout.session.insert(
+                {row: Number.POSITIVE_INFINITY, col: Number.POSITIVE_INFINITY}, text
+            );
+        }
+    }
+
     enter_repl_waiting () {
+        this.add_block();
         console.log(this.state_now);
     }
     enter_repl_running () {
         console.log(this.state_now);
     }
     enter_script_running () {
+        this.add_block();
         console.log(this.state_now);
     }
     enter_script_done () {
@@ -252,7 +297,9 @@ class FancyConsole {
     }
 } 
 
+let fancy_console = new FancyConsole('console');
+
 // let exec_block_1 = new ExecutionBlock(1, document.getElementById('console'));
-// exec_block_1.set_done();
+// exec_block_1.disp_done();
 // let exec_block_2 = new ExecutionBlock(2, document.getElementById('console'));
-// exec_block_2.set_editing();
+// exec_block_2.disp_editing();

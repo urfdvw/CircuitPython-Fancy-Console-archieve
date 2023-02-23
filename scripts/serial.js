@@ -32,7 +32,7 @@ async function connect() {
     reader = inputStream.getReader();
     readLoop();
     start_readLoop();
-    let fancy_console = new FancyConsole('console');
+    fancy_console.start();
 }
 
 // not used
@@ -132,8 +132,8 @@ function send_multiple_lines(lines) {
     // lines: str (str can contain line breaks)
 
     // push to history
-    push_to_cmd_hist(lines);
-    cmd_ind = -1;
+    // push_to_cmd_hist(lines);
+    // cmd_ind = -1;
 
     // dealing with linebreaks and '\n' in text
     lines = lines.split('\\').join('\\\\').split('\n').join('\\n')
@@ -158,9 +158,18 @@ function send_single_line(line) {
     // send one line of code to device
 
     // if command not empty, push the command to history
-    push_to_cmd_hist(line);
-    cmd_ind = -1;
+    // push_to_cmd_hist(line);
+    // cmd_ind = -1;
 
     // send the command to device
     send_cmd(line.trim() + '\x0D');
+}
+
+function send_code(this_editor) {
+    var code = this_editor.getValue().trim();
+    if (code.split('\n').length == 1) {
+        send_single_line(code);
+    } else {
+        send_multiple_lines(code);
+    }
 }
