@@ -32,6 +32,7 @@ async function connect() {
     reader = inputStream.getReader();
     readLoop();
     start_readLoop();
+    let fancy_console = new FancyConsole('console');
 }
 
 // not used

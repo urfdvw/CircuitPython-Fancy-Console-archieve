@@ -252,8 +252,6 @@ class FancyConsole {
     }
 } 
 
-let fancy_console = new FancyConsole('console');
-
 // let exec_block_1 = new ExecutionBlock(1, document.getElementById('console'));
 // exec_block_1.set_done();
 // let exec_block_2 = new ExecutionBlock(2, document.getElementById('console'));
