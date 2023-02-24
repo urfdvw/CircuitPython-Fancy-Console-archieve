@@ -201,105 +201,38 @@ class ExecutionBlock {
 class FancyConsole {
     constructor (dom_id) {
         this.console = document.getElementById(dom_id);
-        this.state_now = null;
-        this.state_last = null;
-
         this.block_list = [];
     }
 
     start () {
-        setInterval(() => {
-            this.check();
-        }, 10);
-
         let start_action = setInterval(() => {
-            sendCTRLC();
-            if (this.state_now === "repl waiting") {
+            if (repl_state) {
                 clearInterval(start_action);
             }
+            sendCTRLC();
         }, 200);
-    }
-
-    check () {
-        this.state_last = this.state_now;
-        let title_bar = document.getElementById("title_bar").innerText;
-        if (title_bar.includes('REPL')) {
-            if (serial.session.getLine(serial.session.getLength() - 1) === '>>> ') {
-                this.state_now = "repl waiting";
-            } else {
-                this.state_now = "repl running";
-            }
-        } else {
-            if (title_bar.includes('code.py') && !title_bar.includes('@')) {
-                this.state_now = "script running";
-            } else {
-                this.state_now = "script done";
-            }
-        }
-        // dispatcher
-        if (this.state_now !== null && this.state_last !== null) {
-            if (this.state_now !== this.state_last) {
-                if (this.state_last.startsWith('repl') && this.state_now.endsWith('done')) {
-                    // ignore the "Done" after repl close
-                    this.state_now = this.state_last;
-                    return;
-                }
-                if (this.state_now === "repl waiting") {
-                    this.enter_repl_waiting();
-                }
-                if (this.state_now === "repl running") {
-                    this.enter_repl_running();
-                }
-                if (this.state_now === "script running") {
-                    this.enter_script_running();
-                }
-                if (this.state_now === "script done") {
-                    this.enter_script_done();
-                }
-            }
-        }
     }
 
     add_block () {
         let block_index = this.block_list.length;
         let current_blcok = new ExecutionBlock(block_index, this.console);
         this.block_list.push(current_blcok);
-        if (this.state_now === 'repl waiting') {
-            current_blcok.disp_repl_waiting();
-        } else if (this.state_now === 'script running') {
-            current_blcok.disp_script_running();
-        } else {
-            console.log('error adding block')
-        }
+    }
+
+    get current_blcok () {
+        return this.block_list.at(-1);
     }
 
     append_pyout (parts) {
+        if (this.block_list.length === 0) {
+            return;
+        }
         for (const text of parts) {
-            this.block_list.at(-1).pyout.session.insert(
+            this.current_blcok.pyout.session.insert(
                 {row: Number.POSITIVE_INFINITY, col: Number.POSITIVE_INFINITY}, text
             );
         }
     }
-
-    enter_repl_waiting () {
-        this.add_block();
-        console.log(this.state_now);
-    }
-    enter_repl_running () {
-        console.log(this.state_now);
-    }
-    enter_script_running () {
-        this.add_block();
-        console.log(this.state_now);
-    }
-    enter_script_done () {
-        console.log(this.state_now);
-    }
 } 
 
 let fancy_console = new FancyConsole('console');
-
-// let exec_block_1 = new ExecutionBlock(1, document.getElementById('console'));
-// exec_block_1.disp_done();
-// let exec_block_2 = new ExecutionBlock(2, document.getElementById('console'));
-// exec_block_2.disp_editing();
